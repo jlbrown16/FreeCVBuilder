@@ -15,6 +15,7 @@
     <style>
         /* Set default font to Inter */
         html { font-family: 'Inter', sans-serif; }
+        
         /* Print Styles */
         @media print {
             .no-print { display: none !important; }
@@ -49,6 +50,14 @@
             .cv-preview-container * {
                 -webkit-print-color-adjust: exact !important;
                 color-adjust: exact !important;
+            }
+            
+            /* NEW FIX: Remove excessive bottom margin by resetting height and padding on the CV document itself */
+            .cv-document {
+                min-height: auto !important; /* Remove fixed/min height */
+                height: auto !important;    /* Let content dictate height */
+                padding: 24px !important;   /* Apply a uniform, small padding for print border */
+                margin: 0 !important;
             }
         }
         /* Toggle Switch Custom Styling */
@@ -252,7 +261,8 @@
           return (
             <div
               ref={ref}
-              className="bg-white p-6 md:p-10 shadow-xl min-h-[80vh] w-full"
+              // Added cv-document class for print targeting (Fixes bottom margin)
+              className="bg-white p-6 md:p-10 shadow-xl min-h-[80vh] w-full cv-document"
             >
               {/* Header - Personal Info */}
               {/* Dynamic border color */}
