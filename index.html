@@ -87,6 +87,7 @@
           duration: '',
         });
 
+        // NOTE: This constant holds the clean, default data structure
         const initialCVData = {
           personal: {
             // Updated name
@@ -389,6 +390,16 @@
           }, []);
 
 
+          // --- Reset Handler (New Function) ---
+          const handleReset = () => {
+              if (window.confirm("Are you sure you want to reset all data to the example plumber CV? This action cannot be undone.")) {
+                  // Create a fresh deep copy of the initial data
+                  const initialDataCopy = JSON.parse(JSON.stringify(initialCVData));
+                  setCvData(initialDataCopy);
+                  handleSave(initialDataCopy); // Save the reset state to localStorage
+              }
+          };
+
           // --- Input Handlers ---
 
           const handlePersonalChange = (e) => {
@@ -466,12 +477,20 @@
                 <div className="lg:grid lg:grid-cols-2 lg:gap-8">
                   {/* Input Form - Now lg:col-span-1 for 50% width */}
                   <div className="lg:col-span-1 no-print bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 lg:mb-0">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex justify-between items-center mb-6 flex-wrap gap-y-2">
                         <h2 className="text-2xl font-bold text-gray-800">Edit Your Details</h2>
-                        <div className="relative">
+                        <div className="relative flex space-x-2">
+                            {/* NEW Reset Button */}
+                            <button
+                                onClick={handleReset}
+                                className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
+                                aria-label="Reset Data"
+                            >
+                                Reset to Example Data
+                            </button>
                             <button
                                 onClick={handlePrint}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out mr-2"
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
                                 aria-label="Print CV"
                             >
                                 Print/PDF
