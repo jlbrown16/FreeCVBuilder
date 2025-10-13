@@ -44,6 +44,12 @@
             
             /* Remove shadows for clean PDF output */
             .bg-white, .shadow-xl { box-shadow: none !important; }
+            
+            /* FIX: Ensure background colors print for skill badges (Android PDF fix) */
+            .cv-preview-container * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
         }
         /* Toggle Switch Custom Styling */
         .toggle-checkbox {
@@ -62,7 +68,7 @@
         const { useState, useCallback, useRef, useEffect, forwardRef } = React;
         const root = ReactDOM.createRoot(document.getElementById('root'));
 
-        // Map user-facing names to Tailwind color prefixes (Added 'Grey')
+        // Map user-facing names to Tailwind color prefixes
         const colorMap = {
             'Indigo': 'indigo',
             'Blue': 'blue',
@@ -90,7 +96,6 @@
         // NOTE: This constant holds the clean, default data structure
         const initialCVData = {
           personal: {
-            // Updated name
             name: 'David Johnson',
             title: 'Qualified Plumber & Heating Engineer',
             email: 'david.johnson.plumbing@example.com',
@@ -102,6 +107,7 @@
             showLinkedin: false,
             primaryColor: 'indigo', // Default color scheme
           },
+          // British spelling: 'Specialised' and 'refurbishments' are used here.
           summary: 'Highly skilled and reliable Level 3 Qualified Plumber with 8 years of experience in domestic and light commercial settings. Proficient in boiler installation, fault finding, and complete bathroom refurbishments. Committed to delivering high-quality workmanship and excellent customer service.',
           experience: [
             {
@@ -119,7 +125,6 @@
               degree: 'NVQ Level 3 Plumbing and Heating',
               duration: '2014 - 2016',
             },
-            // NEW GCSE Entry added back for school leaver context
             {
               id: 2,
               institution: 'Guiseley High School',
@@ -262,7 +267,7 @@
                     </p>
                 )}
                 
-                {/* Contact Info with Icons and Spacing (Dynamic icon colors) */}
+                {/* Contact Info with Icons and Spacing (Dynamic icon colours) */}
                 <div className="flex flex-wrap text-sm text-gray-600 gap-y-1 gap-x-4">
                   
                   {/* Phone */}
@@ -297,7 +302,7 @@
 
               {/* Summary */}
               <section className="mb-6">
-                {/* Dynamic text color */}
+                {/* Dynamic text colour */}
                 <h2 className={`text-lg font-bold uppercase ${getTextColor(600)} border-b border-gray-300 mb-2 pb-1`}>
                   Professional Summary
                 </h2>
@@ -308,7 +313,7 @@
 
               {/* Experience */}
               <section className="mb-6">
-                {/* Dynamic text color */}
+                {/* Dynamic text colour */}
                 <h2 className={`text-lg font-bold uppercase ${getTextColor(600)} border-b border-gray-300 mb-3 pb-1`}>
                   Work Experience
                 </h2>
@@ -322,7 +327,7 @@
                         {exp.duration || '2020 - Present'}
                       </span>
                     </div>
-                    {/* Dynamic text color */}
+                    {/* Dynamic text colour */}
                     <p className={`text-sm ${getTextColor(600)} font-medium italic mb-1`}>
                       {exp.company || 'Company Name'}
                     </p>
@@ -335,7 +340,7 @@
 
               {/* Education */}
               <section className="mb-6">
-                {/* Dynamic text color */}
+                {/* Dynamic text colour */}
                 <h2 className={`text-lg font-bold uppercase ${getTextColor(600)} border-b border-gray-300 mb-3 pb-1`}>
                   Education
                 </h2>
@@ -349,7 +354,7 @@
                         {edu.duration || '2016 - 2020'}
                       </span>
                     </div>
-                    {/* Dynamic text color */}
+                    {/* Dynamic text colour */}
                     <p className={`text-sm ${getTextColor(600)} font-medium italic`}>
                       {edu.institution || 'University Name'}
                     </p>
@@ -359,7 +364,7 @@
 
               {/* Skills */}
               <section>
-                {/* Dynamic text color */}
+                {/* Dynamic text colour */}
                 <h2 className={`text-lg font-bold uppercase ${getTextColor(600)} border-b border-gray-300 mb-3 pb-1`}>
                   Skills & Technologies
                 </h2 >
@@ -506,12 +511,13 @@
                         </div>
                     </div>
                     
-                    {/* Color Selector (Updated) */}
+                    {/* Colour Selector (Updated for British English) */}
                     <div className="mb-8 border-b pb-4">
+                      {/* British English Spelling for Colour Scheme */}
                         <h3 className="text-xl font-semibold text-gray-700 mb-4">
-                            Color Scheme
+                            Colour Scheme
                         </h3>
-                        <div className="flex space-x-3"> {/* Reduced spacing */}
+                        <div className="flex space-x-3">
                             {Object.entries(colorMap).map(([name, prefix]) => (
                                 <button
                                     key={prefix}
@@ -530,7 +536,7 @@
 
                     {/* Personal Information */}
                     <div className="mb-8 border-b pb-4">
-                      {/* Dynamic color in header */}
+                      {/* Dynamic colour in header */}
                       <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                         Personal Information
                       </h3>
