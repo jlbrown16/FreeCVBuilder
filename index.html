@@ -109,11 +109,11 @@
             title: 'Qualified Plumber & Heating Engineer',
             email: 'david.johnson.plumbing@example.com',
             phone: '07890 123456',
-            linkedin: '',
+            linkedin: 'linkedin.com/in/davidjohnsonplumbing',
             address: 'Guiseley, Leeds LS20 1BG',
             showAddress: true,
             showTitle: true,
-            showLinkedin: false,
+            showLinkedin: true,
             primaryColor: 'indigo', // Default color scheme
           },
           // British spelling: 'Specialised' and 'refurbishments' are used here.
@@ -277,34 +277,38 @@
                     </p>
                 )}
                 
-                {/* Contact Info with Icons and Spacing (Dynamic icon colours) */}
-                <div className="flex flex-wrap text-sm text-gray-600 gap-y-1 gap-x-4">
+                {/* NEW: Contact Info Layout
+                  - Responsive: 1 column on mobile, 2 columns on larger screens (md:grid-cols-2)
+                  - Grid gap for better spacing (gap-x-4 gap-y-1)
+                  - Each item is a flex container for perfect icon/text alignment 
+                */}
+                <div className="grid grid-cols-1 md:grid-cols-2 text-sm text-gray-600 gap-x-4 gap-y-1">
                   
                   {/* Phone */}
-                  <span className="flex items-center space-x-1">
-                    <i className={`fa-solid fa-square-phone ${getTextColor(600)} text-lg`}></i>
-                    <span>{phone}</span>
+                  <span className="flex items-center space-x-2">
+                    <i className={`fa-solid fa-square-phone ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
+                    <span className="truncate">{phone}</span>
                   </span>
                   
                   {/* Email */}
-                  <span className="flex items-center space-x-1">
-                    <i className={`fa-solid fa-square-envelope ${getTextColor(600)} text-lg`}></i>
-                    <span>{email}</span>
+                  <span className="flex items-center space-x-2">
+                    <i className={`fa-solid fa-square-envelope ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
+                    <span className="truncate">{email}</span>
                   </span>
 
                   {/* Address */}
                   {showAddress && address && (
-                    <span className="flex items-center space-x-1">
-                      <i className={`fa-solid fa-location-dot ${getTextColor(600)} text-lg`}></i>
-                      <span>{address}</span>
+                    <span className="flex items-center space-x-2">
+                      <i className={`fa-solid fa-location-dot ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
+                      <span className="truncate">{address}</span>
                     </span>
                   )}
                   
                   {/* LinkedIn */}
                   {showLinkedin && linkedin && (
-                    <span className="flex items-center space-x-1">
-                      <i className={`fa-brands fa-square-linkedin ${getTextColor(600)} text-lg`}></i>
-                      <span className="truncate max-w-[200px]">{linkedin}</span>
+                    <span className="flex items-center space-x-2">
+                      <i className={`fa-brands fa-square-linkedin ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
+                      <span className="truncate">{linkedin}</span>
                     </span>
                   )}
                 </div>
