@@ -59,6 +59,13 @@
                 padding: 24px !important;   /* Apply a uniform, small padding for print border */
                 margin: 0 !important;
             }
+            
+            /* Ensure the bullet points print correctly */
+            .cv-document ul {
+                list-style-type: disc;
+                padding-left: 20px;
+                margin-top: 4px;
+            }
         }
         /* Toggle Switch Custom Styling */
         .toggle-checkbox {
@@ -87,6 +94,27 @@
         };
 
         // --- Initial CV Data Structure ---
+        const createEmptyPersonal = () => ({
+            name: '',
+            title: '',
+            email: '',
+            phone: '',
+            linkedin: '',
+            address: '',
+            showAddress: true,
+            showTitle: true,
+            showLinkedin: true,
+            primaryColor: 'indigo',
+        });
+        
+        const createEmptyData = () => ({
+            personal: createEmptyPersonal(),
+            summary: '',
+            experience: [],
+            education: [],
+            skills: '',
+        });
+
         const createEmptyExperience = (id) => ({
           id,
           title: '',
@@ -102,7 +130,7 @@
           duration: '',
         });
 
-        // NOTE: This constant holds the clean, default data structure
+        // NOTE: This constant holds the clean, default data structure (Example Plumber CV)
         const initialCVData = {
           personal: {
             name: 'David Johnson',
@@ -248,11 +276,32 @@
           const { name, title, email, phone, linkedin, showTitle, showLinkedin, address, showAddress, primaryColor } = personal;
 
           const SkillPill = ({ skill }) => (
-            // Dynamic background and text colors
-            <span className={`inline-block bg-${primaryColor}-100 text-${primaryColor}-800 text-xs font-semibold px-3 py-1 rounded-full mr-2 mb-2`}>
+            // Dynamic background, text colors, and added subtle ring border
+            <span className={`inline-block bg-${primaryColor}-100 text-${primaryColor}-800 text-xs font-semibold px-3 py-1 rounded-full ring-1 ring-${primaryColor}-200 mr-2 mb-2`}>
               {skill.trim()}
             </span>
           );
+          
+          const ExperienceDescription = ({ description }) => {
+              if (!description) return <p className="text-xs text-gray-700">Key responsibilities and achievements.</p>;
+              
+              // Split by newline, filter out empty lines, and map to list items
+              const lines = description.split('\n').filter(line => line.trim().length > 0);
+              
+              if (lines.length === 0) return null;
+
+              return (
+                  // Using an unordered list for proper CV formatting
+                  <ul className="list-disc list-outside ml-5 text-xs text-gray-700">
+                      {lines.map((line, index) => (
+                          // Trim the bullet point character if it exists (e.g., '•' or '-')
+                          <li key={index} className="mb-0.5">
+                              {line.trim().startsWith('•') || line.trim().startsWith('-') ? line.trim().substring(1).trim() : line.trim()}
+                          </li>
+                      ))}
+                  </ul>
+              );
+          };
 
           // Dynamic class utility function
           const getTextColor = (shade) => `text-${primaryColor}-${shade}`;
@@ -278,14 +327,11 @@
                 )}
                 
                 {/* Contact Info Layout
-                  - Responsive: 1 column on mobile, 2 columns on larger screens (md:grid-cols-2)
-                  - Grid gap for better spacing (gap-x-4 gap-y-1)
-                  - Each item is a flex container for perfect icon/text alignment 
+                  - items-center ensures perfect vertical alignment between icon and text, even if text wraps to two lines.
                 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 text-sm text-gray-600 gap-x-4 gap-y-1">
                   
                   {/* 1. Phone */}
-                  {/* CHANGED items-start to items-center and removed mt-[2px] from icon */}
                   <span className="flex items-center space-x-2">
                     <i className={`fa-solid fa-square-phone ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
                     <span className="break-all">{phone}</span>
@@ -293,7 +339,6 @@
                   
                   {/* 2. Address (Conditional) */}
                   {showAddress && address && (
-                    /* CHANGED items-start to items-center and removed mt-[2px] from icon */
                     <span className="flex items-center space-x-2">
                       <i className={`fa-solid fa-location-dot ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
                       <span className="break-words">{address}</span>
@@ -301,7 +346,6 @@
                   )}
                   
                   {/* 3. Email */}
-                  {/* CHANGED items-start to items-center and removed mt-[2px] from icon */}
                   <span className="flex items-center space-x-2">
                     <i className={`fa-solid fa-square-envelope ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
                     <span className="break-all">{email}</span>
@@ -309,7 +353,6 @@
 
                   {/* 4. LinkedIn (Conditional) */}
                   {showLinkedin && linkedin && (
-                    /* CHANGED items-start to items-center and removed mt-[2px] from icon */
                     <span className="flex items-center space-x-2">
                       <i className={`fa-brands fa-square-linkedin ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
                       <span className="break-all">{linkedin}</span>
@@ -349,9 +392,8 @@
                     <p className={`text-sm ${getTextColor(600)} font-medium italic mb-1`}>
                       {exp.company || 'Company Name'}
                     </p>
-                    <p className="text-xs text-gray-700 whitespace-pre-line">
-                      {exp.description || 'Key responsibilities and achievements.'}
-                    </p>
+                    {/* Replaced p tag with custom ExperienceDescription component for proper bullets */}
+                    <ExperienceDescription description={exp.description} />
                   </div>
                 ))}
               </section>
@@ -420,7 +462,8 @@
           }, []);
 
 
-          // --- Reset Handler (New Function) ---
+          // --- Reset Handlers (Updated) ---
+          
           const handleReset = () => {
               // NOTE: window.confirm is used here for simplicity as the environment permits it for critical actions
               if (window.confirm("Are you sure you want to reset all data to the example plumber CV? This action cannot be undone.")) {
@@ -428,6 +471,15 @@
                   const initialDataCopy = JSON.parse(JSON.stringify(initialCVData));
                   setCvData(initialDataCopy);
                   handleSave(initialDataCopy); // Save the reset state to localStorage
+              }
+          };
+          
+          const handleClear = () => {
+              // NOTE: window.confirm is used here for simplicity as the environment permits it for critical actions
+              if (window.confirm("Are you sure you want to CLEAR all data? This will leave all fields blank.")) {
+                  const emptyData = createEmptyData();
+                  setCvData(emptyData);
+                  handleSave(emptyData); // Save the empty state to localStorage
               }
           };
 
@@ -511,13 +563,21 @@
                     <div className="flex justify-between items-center mb-6 flex-wrap gap-y-2">
                         <h2 className="text-2xl font-bold text-gray-800">Edit Your Details</h2>
                         <div className="relative flex space-x-2">
+                            {/* Clear Button (New) */}
+                            <button
+                                onClick={handleClear}
+                                className={`bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
+                                aria-label="Clear All Data"
+                            >
+                                Clear All
+                            </button>
                             {/* Reset Button */}
                             <button
                                 onClick={handleReset}
                                 className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
                                 aria-label="Reset Data"
                             >
-                                Reset to Example Data
+                                Reset to Example
                             </button>
                             <button
                                 onClick={handlePrint}
