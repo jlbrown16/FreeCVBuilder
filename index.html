@@ -16,16 +16,32 @@
         /* Print Styles */
         @media print {
             .no-print { display: none !important; }
+
+            /* FIX: Force white background and zero margins on the entire page content */
+            html, body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                min-height: 100vh;
+            }
+
             .cv-preview-container { 
                 display: block !important; 
                 width: 100% !important; 
                 margin: 0 !important; 
                 padding: 0 !important;
             }
+            
+            /* Override the desktop container padding/margins */
+            .container { 
+                width: 100% !important; 
+                max-width: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+            }
+            
             /* Remove shadows for clean PDF output */
             .bg-white, .shadow-xl { box-shadow: none !important; }
-            /* Force full width on print */
-            body, .container { width: 100%; max-width: none; margin: 0; padding: 0; }
         }
         /* Toggle Switch Custom Styling */
         .toggle-checkbox {
@@ -285,7 +301,7 @@
               <section>
                 <h2 className="text-lg font-bold uppercase text-indigo-600 border-b border-gray-300 mb-3 pb-1">
                   Skills & Technologies
-                </h2>
+                </h2 >
                 <div className="flex flex-wrap gap-1">
                   {skills
                     .split(',')
@@ -303,9 +319,7 @@
 
         function App() {
           const [cvData, setCvData] = useState(loadCVData);
-          // Removed saveStatus state initialization
           const previewRef = useRef(null);
-
           const debounceTimeoutRef = useRef(null);
 
           const handleSave = useCallback((dataToSave) => {
@@ -316,7 +330,6 @@
 
             debounceTimeoutRef.current = setTimeout(() => {
                 saveCVData(dataToSave);
-                // Removed all setSaveStatus calls
             }, 500);
           }, []);
 
@@ -398,7 +411,6 @@
                             >
                                 Print/PDF
                             </button>
-                            {/* Removed status message div */}
                         </div>
                     </div>
 
