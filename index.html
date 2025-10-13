@@ -11,7 +11,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Font Awesome CDN for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJWaE+RzZ5ws6sjJ5E+sJ/zK8M/2rX8bX/3zY5zQ/m/9+2eJzI+s/zK8M/2rX8bX/3zY5zQ/m/9+2eJzI+2/4l/3w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Set default font to Inter */
         html { font-family: 'Inter', sans-serif; }
@@ -355,9 +355,12 @@
                     )}
                     
                     {/* Contact Info Layout
-                      - items-center ensures perfect vertical alignment between icon and text, even if text wraps to two lines.
+                      
+                      FIX: Changed layout from grid-cols-2 to grid-cols-1 md:grid-cols-4 
+                           and removed horizontal gap (gap-x-4) for better print flow. 
+                           Increased vertical gap to gap-y-2.
                     */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 text-sm text-gray-600 gap-x-4 gap-y-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 text-sm text-gray-600 gap-y-2">
                       
                       {/* 1. Phone */}
                       <span className="flex items-center space-x-2">
