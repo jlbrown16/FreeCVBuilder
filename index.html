@@ -79,37 +79,50 @@
 
         const initialCVData = {
           personal: {
-            name: 'Alastair Smith',
-            title: 'Digital Marketing Executive',
-            email: 'alastair.smith@example.co.uk',
-            phone: '07700 900345',
-            linkedin: 'linkedin.com/in/alastairsmith',
-            // New Address fields
-            address: 'Guiseley, Leeds LS20 1GB',
+            name: 'David Johnson',
+            title: 'Qualified Plumber & Heating Engineer',
+            email: 'david.johnson.plumbing@example.com',
+            phone: '07890 123456',
+            linkedin: '', // Removed example LinkedIn for trades context
+            // Updated Address fields as requested
+            address: 'Guiseley, Leeds LS20 1BG',
             showAddress: true,
             // Existing fields
             showTitle: true,
-            showLinkedin: true,
+            showLinkedin: false, // Set to false by default for this persona
           },
-          summary: 'A highly adaptable and results-driven professional with 3 years of experience developing successful digital campaigns and strategies across multiple channels. Proven track record of improving ROI and brand visibility.',
+          summary: 'Highly skilled and reliable Level 3 Qualified Plumber with 8 years of experience in domestic and light commercial settings. Proficient in boiler installation, fault finding, and complete bathroom refurbishments. Committed to delivering high-quality workmanship and excellent customer service.',
           experience: [
             {
               id: 1,
-              title: 'Digital Marketing Executive',
-              company: 'Trafalgar Solutions Ltd.',
-              duration: '2022 - Present',
-              description: '• Managed a budget of £50k, achieving a 15% increase in lead generation.\n• Oversaw SEO and content strategy, resulting in a 25% organic traffic boost.\n• Collaborated cross-functionally with Sales and Product teams to align marketing efforts.',
+              title: 'Self-Employed Plumbing Contractor',
+              company: 'D. Johnson Plumbing & Heating',
+              duration: '2020 - Present',
+              description: '• Managed all aspects of a busy independent business, including quoting, scheduling, and billing.\n• Specialised in complete domestic bathroom installations, fitting WCs, baths, showers, and associated pipework.\n• Successfully completed 150+ repair jobs per year, including leaking taps, burst pipes, and drain blockages.',
+            },
+            {
+              id: 2,
+              title: 'Maintenance Plumber',
+              company: 'Bradford Housing Association',
+              duration: '2016 - 2020',
+              description: '• Performed routine and emergency plumbing repairs across a portfolio of 300+ residential properties.\n• Carried out annual servicing and basic maintenance on central heating systems.\n• Maintained a 98% first-time fix rate for common issues like boiler pressure loss and radiator failure.',
             },
           ],
           education: [
             {
               id: 1,
-              institution: 'University of Manchester',
-              degree: 'BA (Hons) Business Studies',
-              duration: '2019 - 2022',
+              institution: 'Leeds College of Building',
+              degree: 'NVQ Level 3 Plumbing and Heating',
+              duration: '2014 - 2016',
+            },
+            {
+              id: 2,
+              institution: 'Airedale High School',
+              degree: 'GCSEs (Maths, English, Science)',
+              duration: '2009 - 2014',
             },
           ],
-          skills: 'SEO, Google Analytics, PPC, Content Strategy, CRM, Microsoft Office',
+          skills: 'NVQ Level 3 Plumbing, Boiler Service & Repair, Bathroom Fitting, Leak Diagnostics, Pipework Installation (Copper/Plastic), Customer Service, Health & Safety',
         };
 
         // --- Local Storage Handlers ---
@@ -451,7 +464,7 @@
                           name="name"
                           value={cvData.personal.name}
                           onChange={handlePersonalChange}
-                          placeholder="Alastair Smith"
+                          placeholder="David Johnson"
                         />
                         <InputField
                           label="Email"
@@ -459,14 +472,14 @@
                           type="email"
                           value={cvData.personal.email}
                           onChange={handlePersonalChange}
-                          placeholder="your.email@example.co.uk"
+                          placeholder="your.email@example.com"
                         />
                         <InputField
                           label="Phone Number"
                           name="phone"
                           value={cvData.personal.phone}
                           onChange={handlePersonalChange}
-                          placeholder="07700 900345"
+                          placeholder="07890 123456"
                         />
                         
                         {/* Toggle for Professional Title */}
@@ -483,7 +496,7 @@
                               name="title"
                               value={cvData.personal.title}
                               onChange={handlePersonalChange}
-                              placeholder="Digital Marketing Executive"
+                              placeholder="Qualified Plumber"
                             />
                         )}
                         
@@ -519,7 +532,7 @@
                               name="address"
                               value={cvData.personal.address}
                               onChange={handlePersonalChange}
-                              placeholder="14 New Street, Manchester M1 1AA"
+                              placeholder="Guiseley, Leeds LS20 1BG"
                               fullWidth={true} /* Span across both columns */
                             />
                         )}
@@ -562,21 +575,21 @@
                               name="title"
                               value={exp.title}
                               onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., Marketing Assistant"
+                              placeholder="e.g., Plumbing Contractor"
                             />
                             <InputField
                               label="Company"
                               name="company"
                               value={exp.company}
                               onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., Trafalgar Solutions Ltd."
+                              placeholder="e.g., D. Johnson Plumbing & Heating"
                             />
                             <InputField
                               label="Duration"
                               name="duration"
                               value={exp.duration}
                               onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., 2022 - Present"
+                              placeholder="e.g., 2020 - Present"
                             />
                             <div className="col-span-2">
                                 <TextAreaField
@@ -585,7 +598,7 @@
                                     value={exp.description}
                                     onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
                                     rows={4}
-                                    placeholder="Use bullet points (e.g., • Achieved target metrics; • Led team briefing)"
+                                    placeholder="Use bullet points (e.g., • Managed all aspects of the business; • Specialised in bathroom fitting)"
                                 />
                             </div>
                           </div>
@@ -619,21 +632,21 @@
                               name="degree"
                               value={edu.degree}
                               onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., BA (Hons) History"
+                              placeholder="e.g., NVQ Level 3 Plumbing"
                             />
                             <InputField
                               label="Institution"
                               name="institution"
                               value={edu.institution}
                               onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., University of Bristol"
+                              placeholder="e.g., Leeds College of Building"
                             />
                             <InputField
                               label="Duration"
                               name="duration"
                               value={edu.duration}
                               onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., 2019 - 2022"
+                              placeholder="e.g., 2014 - 2016"
                               fullWidth
                             />
                           </div>
@@ -658,7 +671,7 @@
                         value={cvData.skills}
                         onChange={handleSummaryAndSkillsChange}
                         rows={2}
-                        placeholder="e.g., SEO, Google Analytics, CRM, Microsoft Office"
+                        placeholder="e.g., NVQ Level 3 Plumbing, Boiler Service & Repair, Bathroom Fitting"
                         fullWidth
                       />
                     </div>
