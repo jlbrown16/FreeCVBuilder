@@ -7,6 +7,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & Babel CDNs -->
+    <!-- FIX: Updated React and ReactDOM CDNs to v18 for modern stability and createRoot -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -74,6 +75,20 @@
                 list-style-type: disc;
                 padding-left: 20px;
                 margin-top: 4px;
+            }
+            
+            /* CRITICAL PRINT FIX: Ensure contact details flow naturally on print */
+            .cv-contact-bar {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                /* Add sufficient gap between items in print mode to encourage wrapping */
+                gap: 8px 24px !important; 
+            }
+            
+            .cv-contact-bar > span {
+                /* Give each item some room to breathe, while allowing it to shrink */
+                flex-shrink: 1;
+                min-width: 150px; 
             }
         }
         /* Toggle Switch Custom Styling */
@@ -356,13 +371,12 @@
                         </p>
                     )}
                     
-                    {/* Contact Info Layout
+                    {/* Contact Info Layout 
                       
-                      FIX: Changed layout from grid-cols-2 to grid-cols-1 md:grid-cols-4 
-                           and removed horizontal gap (gap-x-4) for better print flow. 
-                           Increased vertical gap to gap-y-2.
+                      FIX: Switched from rigid grid to a flexible wrapping layout (flex flex-wrap) 
+                      to ensure items flow better in the preview and wrap reliably on print.
                     */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 text-sm text-gray-600 gap-y-2">
+                    <div className="cv-contact-bar flex flex-wrap items-center text-sm text-gray-600 gap-x-6 gap-y-2">
                       
                       {/* 1. Phone */}
                       <span className="flex items-center space-x-2">
@@ -734,11 +748,6 @@
                           <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                             Personal Information
                           </h3>
-                          {/*
-                            FIX: Changed grid-cols-1 md:grid-cols-2 to grid-cols-1 on mobile for all sections,
-                            and manually manage column spanning for pairs of elements.
-                            This ensures Full Name / Email, and Title / LinkedIn stack nicely on mobile.
-                          */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             
                             {/* Full Name & Email (Pair 1) */}
