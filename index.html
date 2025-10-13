@@ -11,7 +11,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Font Awesome CDN for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJWaE+RzZ5ws6sjJ5E+sJ/zK8M/2rX8bX/3zY5zQ/m/9+2eJzI+2/4l/3+2/4l/3w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Set default font to Inter */
         html { font-family: 'Inter', sans-serif; }
@@ -213,7 +213,7 @@
 
         // --- Custom Components ---
 
-        const InputField = ({ label, name, value, onChange, type = 'text', fullWidth = false, placeholder = '', colorPrefix }) => (
+        const InputField = ({ label, name, value, onChange, type = 'text', fullWidth = false, placeholder = '', colorPrefix, isInvalid = false, validationMessage = '' }) => (
           <div className={`mb-3 ${fullWidth ? 'col-span-2' : ''}`}>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {label}
@@ -224,9 +224,16 @@
               value={value}
               onChange={onChange}
               placeholder={placeholder}
-              // Dynamic focus ring and border color
-              className={`w-full p-2 border border-gray-300 rounded-lg focus:ring-${colorPrefix}-500 focus:border-${colorPrefix}-500 transition duration-150 ease-in-out`}
+              // Dynamic focus ring and border color based on validation
+              className={`w-full p-2 border rounded-lg transition duration-150 ease-in-out ${
+                isInvalid
+                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                  : `border-gray-300 focus:ring-${colorPrefix}-500 focus:border-${colorPrefix}-500`
+              }`}
             />
+            {isInvalid && validationMessage && (
+                <p className="mt-1 text-xs text-red-500 font-medium">{validationMessage}</p>
+            )}
           </div>
         );
 
@@ -454,14 +461,21 @@
 
         function App() {
           const [cvData, setCvData] = useState(loadCVData);
-          const [isSaving, setIsSaving] = useState(false); // NEW: State for saving indicator
+          const [isSaving, setIsSaving] = useState(false);
+          const [draggedId, setDraggedId] = useState(null); // State for drag-and-drop
           const previewRef = useRef(null);
           const debounceTimeoutRef = useRef(null);
           
           const primaryColorPrefix = cvData.personal.primaryColor;
 
+          // Helper to validate fields (Suggestion 2)
+          const validateField = (name, value) => {
+              if (name === 'name' && value.trim() === '') return 'Name is required.';
+              if (name === 'email' && !value.includes('@')) return 'Must be a valid email address.';
+              return null; // Null means valid
+          };
+
           const handleSave = useCallback((dataToSave) => {
-            // NEW: Set saving status immediately
             setIsSaving(true); 
             
             if (debounceTimeoutRef.current) {
@@ -470,13 +484,12 @@
 
             debounceTimeoutRef.current = setTimeout(() => {
                 saveCVData(dataToSave);
-                // NEW: Clear saving status after save
                 setIsSaving(false); 
             }, 500);
           }, []);
 
 
-          // --- Reset Handlers (Updated) ---
+          // --- Reset Handlers ---
           
           const handleReset = () => {
               // NOTE: window.confirm is used here for simplicity as the environment permits it for critical actions
@@ -558,6 +571,79 @@
           const handlePrint = () => {
             window.print();
           };
+          
+          // --- Drag-and-Drop Reordering (Suggestion 1) ---
+          
+          const handleReorder = (section, fromId, toId) => {
+            if (fromId === toId) return;
+            
+            const items = [...cvData[section]];
+            const fromIndex = items.findIndex(item => item.id === fromId);
+            const toIndex = items.findIndex(item => item.id === toId);
+
+            if (fromIndex === -1 || toIndex === -1) return;
+
+            // Move item
+            const [movedItem] = items.splice(fromIndex, 1);
+            items.splice(toIndex, 0, movedItem);
+
+            const newData = { ...cvData, [section]: items };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+
+          // Component for Experience/Education items to handle drag logic
+          const DraggableItem = ({ section, item, children }) => {
+            const isDragged = draggedId === item.id;
+            
+            return (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={() => setDraggedId(item.id)}
+                onDragOver={(e) => e.preventDefault()} // Allows dropping
+                onDragEnter={(e) => e.currentTarget.classList.add(`ring-2`, `ring-${primaryColorPrefix}-400`, 'ring-offset-2')}
+                onDragLeave={(e) => e.currentTarget.classList.remove(`ring-2`, `ring-${primaryColorPrefix}-400`, 'ring-offset-2')}
+                onDrop={() => {
+                  if (draggedId) {
+                      handleReorder(section, draggedId, item.id);
+                      setDraggedId(null);
+                  }
+                }}
+                onDragEnd={() => {
+                    // Cleanup any lingering visual effects on drag end
+                    setDraggedId(null);
+                }}
+                className={`p-4 mb-4 border border-gray-200 rounded-lg bg-gray-50 relative cursor-move transition-all duration-200 ease-in-out
+                            ${isDragged 
+                                ? 'opacity-50 border-dashed border-2' 
+                                : 'hover:bg-gray-100'}
+                            `}
+              >
+                  <div className={`absolute top-0 left-0 w-full h-full pointer-events-none rounded-lg ${isDragged ? `ring-4 ring-dashed ring-${primaryColorPrefix}-500` : ''}`}></div>
+                  
+                  {/* Drag handle icon */}
+                  <div className="absolute top-2 left-2 text-gray-400">
+                      <i className="fa-solid fa-grip-vertical"></i>
+                  </div>
+                  
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => handleRemoveSection(section, item.id)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold p-1 rounded-full text-lg leading-none transition-transform duration-150 z-10"
+                    title={`Remove ${section.slice(0, -1)}`}
+                  >
+                    &times;
+                  </button>
+                  
+                  <div className="pt-2 pl-6">
+                    {children}
+                  </div>
+              </div>
+            );
+          };
+          
 
           return (
             <div className="min-h-screen bg-gray-50 font-sans">
@@ -580,7 +666,7 @@
                             {/* Clear Button */}
                             <button
                                 onClick={handleClear}
-                                className={`bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
+                                className={`bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm`}
                                 aria-label="Clear All Data"
                             >
                                 Clear All
@@ -588,7 +674,7 @@
                             {/* Reset Button */}
                             <button
                                 onClick={handleReset}
-                                className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
+                                className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm`}
                                 aria-label="Reset Data"
                             >
                                 Reset to Example
@@ -628,21 +714,25 @@
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <InputField
-                          label="Full Name"
+                          label="Full Name *"
                           name="name"
                           value={cvData.personal.name}
                           onChange={handlePersonalChange}
                           placeholder="David Johnson"
                           colorPrefix={primaryColorPrefix}
+                          isInvalid={validateField('name', cvData.personal.name) !== null}
+                          validationMessage={validateField('name', cvData.personal.name)}
                         />
                         <InputField
-                          label="Email"
+                          label="Email *"
                           name="email"
                           type="email"
                           value={cvData.personal.email}
                           onChange={handlePersonalChange}
                           placeholder="your.email@example.com"
                           colorPrefix={primaryColorPrefix}
+                          isInvalid={validateField('email', cvData.personal.email) !== null}
+                          validationMessage={validateField('email', cvData.personal.email)}
                         />
                         <InputField
                           label="Phone Number"
@@ -704,7 +794,7 @@
                         {/* Input for Address - visible when toggle is ON */}
                         {cvData.personal.showAddress && (
                             <InputField
-                              label="Address"
+                              label="Address (City, Postcode)"
                               name="address"
                               value={cvData.personal.address}
                               onChange={handlePersonalChange}
@@ -737,55 +827,49 @@
                     <div className="mb-8 border-b pb-4">
                       <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                         Work Experience
+                        <span className="text-sm font-normal text-gray-500 ml-2">(Drag to reorder)</span>
                       </h3>
                       {cvData.experience.map((exp) => (
-                        <div key={exp.id} className="p-4 mb-4 border border-gray-200 rounded-lg bg-gray-50 relative">
-                          <button
-                            onClick={() => handleRemoveSection('experience', exp.id)}
-                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold p-1 rounded-full text-lg leading-none"
-                            title="Remove Job"
-                          >
-                            &times;
-                          </button>
-                          <div className="grid grid-cols-2 gap-4">
-                            <InputField
-                              label="Job Title"
-                              name="title"
-                              value={exp.title}
-                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., Plumbing Contractor"
-                              colorPrefix={primaryColorPrefix}
-                            />
-                            <InputField
-                              label="Company"
-                              name="company"
-                              value={exp.company}
-                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., D. Johnson Plumbing & Heating"
-                              colorPrefix={primaryColorPrefix}
-                            />
-                            <InputField
-                              label="Duration"
-                              name="duration"
-                              value={exp.duration}
-                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                              placeholder="e.g., 2020 - Present"
-                              colorPrefix={primaryColorPrefix}
-                            />
-                            <div className="col-span-2">
-                                <TextAreaField
-                                    label="Description (One bullet point per line)"
-                                    name="description"
-                                    value={exp.description}
-                                    onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
-                                    rows={4}
-                                    // Updated placeholder text for clarity
-                                    placeholder="Enter one bullet point per line. Example:&#10;• Managed all aspects of the business&#10;• Specialised in bathroom fitting"
-                                    colorPrefix={primaryColorPrefix}
+                        <DraggableItem key={exp.id} section="experience" item={exp}>
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField
+                                name="title"
+                                label="Job Title"
+                                value={exp.title}
+                                onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                                placeholder="e.g., Plumbing Contractor"
+                                colorPrefix={primaryColorPrefix}
                                 />
+                                <InputField
+                                name="company"
+                                label="Company"
+                                value={exp.company}
+                                onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                                placeholder="e.g., D. Johnson Plumbing & Heating"
+                                colorPrefix={primaryColorPrefix}
+                                />
+                                <InputField
+                                name="duration"
+                                label="Duration"
+                                value={exp.duration}
+                                onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                                placeholder="e.g., 2020 - Present"
+                                colorPrefix={primaryColorPrefix}
+                                />
+                                <div className="col-span-2">
+                                    <TextAreaField
+                                        label="Description (One bullet point per line)"
+                                        name="description"
+                                        value={exp.description}
+                                        onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                                        rows={4}
+                                        // Updated placeholder text for clarity
+                                        placeholder="Enter one bullet point per line. Example:&#10;• Managed all aspects of the business&#10;• Specialised in bathroom fitting"
+                                        colorPrefix={primaryColorPrefix}
+                                    />
+                                </div>
                             </div>
-                          </div>
-                        </div>
+                        </DraggableItem>
                       ))}
                       <button
                         onClick={() => handleAddSection('experience', createEmptyExperience)}
@@ -799,44 +883,38 @@
                     <div className="mb-8 border-b pb-4">
                       <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                         Education
+                        <span className="text-sm font-normal text-gray-500 ml-2">(Drag to reorder)</span>
                       </h3>
                       {cvData.education.map((edu) => (
-                        <div key={edu.id} className="p-4 mb-4 border border-gray-200 rounded-lg bg-gray-50 relative">
-                          <button
-                            onClick={() => handleRemoveSection('education', edu.id)}
-                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold p-1 rounded-full text-lg leading-none"
-                            title="Remove Education"
-                          >
-                            &times;
-                          </button>
-                          <div className="grid grid-cols-2 gap-4">
-                            <InputField
-                              label="Degree/Qualification"
-                              name="degree"
-                              value={edu.degree}
-                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., NVQ Level 3 Plumbing"
-                              colorPrefix={primaryColorPrefix}
-                            />
-                            <InputField
-                              label="Institution"
-                              name="institution"
-                              value={edu.institution}
-                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., Leeds College of Building"
-                              colorPrefix={primaryColorPrefix}
-                            />
-                            <InputField
-                              label="Duration"
-                              name="duration"
-                              value={edu.duration}
-                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
-                              placeholder="e.g., 2014 - 2016"
-                              fullWidth
-                              colorPrefix={primaryColorPrefix}
-                            />
-                          </div>
-                        </div>
+                        <DraggableItem key={edu.id} section="education" item={edu}>
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputField
+                                label="Degree/Qualification"
+                                name="degree"
+                                value={edu.degree}
+                                onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                                placeholder="e.g., NVQ Level 3 Plumbing"
+                                colorPrefix={primaryColorPrefix}
+                                />
+                                <InputField
+                                label="Institution"
+                                name="institution"
+                                value={edu.institution}
+                                onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                                placeholder="e.g., Leeds College of Building"
+                                colorPrefix={primaryColorPrefix}
+                                />
+                                <InputField
+                                label="Duration"
+                                name="duration"
+                                value={edu.duration}
+                                onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                                placeholder="e.g., 2014 - 2016"
+                                fullWidth
+                                colorPrefix={primaryColorPrefix}
+                                />
+                            </div>
+                        </DraggableItem>
                       ))}
                       <button
                         onClick={() => handleAddSection('education', createEmptyEducation)}
