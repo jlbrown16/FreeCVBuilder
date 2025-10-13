@@ -16,6 +16,15 @@
         /* Set default font to Inter */
         html { font-family: 'Inter', sans-serif; }
         
+        /* Mobile Layout Scroll Fix: On screens smaller than 'lg' (desktop), limit the height of the input form and make it scrollable */
+        @media (max-width: 1023px) {
+            .input-form-scroll {
+                max-height: 80vh; /* 80% of viewport height */
+                overflow-y: auto;
+                padding-right: 1rem; /* Add some padding for better scroll look */
+            }
+        }
+        
         /* Print Styles */
         @media print {
             .no-print { display: none !important; }
@@ -445,12 +454,15 @@
 
         function App() {
           const [cvData, setCvData] = useState(loadCVData);
+          const [isSaving, setIsSaving] = useState(false); // NEW: State for saving indicator
           const previewRef = useRef(null);
           const debounceTimeoutRef = useRef(null);
           
           const primaryColorPrefix = cvData.personal.primaryColor;
 
           const handleSave = useCallback((dataToSave) => {
+            // NEW: Set saving status immediately
+            setIsSaving(true); 
             
             if (debounceTimeoutRef.current) {
                 clearTimeout(debounceTimeoutRef.current);
@@ -458,6 +470,8 @@
 
             debounceTimeoutRef.current = setTimeout(() => {
                 saveCVData(dataToSave);
+                // NEW: Clear saving status after save
+                setIsSaving(false); 
             }, 500);
           }, []);
 
@@ -558,12 +572,12 @@
 
                 {/* Main Layout: Now using 50/50 split (lg:grid-cols-2) on Desktop */}
                 <div className="lg:grid lg:grid-cols-2 lg:gap-8">
-                  {/* Input Form - Now lg:col-span-1 for 50% width */}
-                  <div className="lg:col-span-1 no-print bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 lg:mb-0">
+                  {/* Input Form - Added input-form-scroll class for mobile height constraint */}
+                  <div className="lg:col-span-1 no-print bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 lg:mb-0 input-form-scroll">
                     <div className="flex justify-between items-center mb-6 flex-wrap gap-y-2">
                         <h2 className="text-2xl font-bold text-gray-800">Edit Your Details</h2>
                         <div className="relative flex space-x-2">
-                            {/* Clear Button (New) */}
+                            {/* Clear Button */}
                             <button
                                 onClick={handleClear}
                                 className={`bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
@@ -579,13 +593,7 @@
                             >
                                 Reset to Example
                             </button>
-                            <button
-                                onClick={handlePrint}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
-                                aria-label="Print CV"
-                            >
-                                Print/PDF
-                            </button>
+                            {/* Print button removed from here, added to bottom */}
                         </div>
                     </div>
                     
@@ -854,13 +862,35 @@
                         colorPrefix={primaryColorPrefix}
                       />
                     </div>
+                    
+                    {/* Print Button (Moved to bottom and made full width) */}
+                    <div className="pt-6 border-t mt-6">
+                        <button
+                            onClick={handlePrint}
+                            className={`w-full bg-${primaryColorPrefix}-600 hover:bg-${primaryColorPrefix}-700 text-white font-bold py-3 rounded-lg shadow-xl transition duration-150 ease-in-out text-lg`}
+                            aria-label="Print CV"
+                        >
+                            <i className="fa-solid fa-print mr-2"></i>
+                            Generate PDF / Print CV
+                        </button>
+                    </div>
+
 
                   </div>
 
                   {/* CV Preview - Visible on all devices (now 50% width on desktop) */}
                   <div className="lg:col-span-1 cv-preview-container">
-                    {/* This H2 is hidden on print using the 'no-print' class */}
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4 no-print lg:block hidden">Live Preview</h2>
+                    {/* Live Preview Header with Indicator (NEW) */}
+                    <div className="flex justify-between items-center mb-4 no-print">
+                        <h2 className="text-2xl font-bold text-gray-800 lg:block hidden">Live Preview</h2>
+                        {/* Live Indicator (NEW) */}
+                        {isSaving && (
+                            <span className={`text-sm font-medium flex items-center text-${primaryColorPrefix}-600 animate-pulse`}>
+                                <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                                Updating...
+                            </span>
+                        )}
+                    </div>
                     <div className="sticky top-8">
                         <CVPreview data={cvData} ref={previewRef} />
                     </div>
