@@ -732,6 +732,7 @@
                           <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                             Personal Information
                           </h3>
+                          {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 for full-width inputs on mobile */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <InputField
                               label="Full Name *"
@@ -763,7 +764,7 @@
                               colorPrefix={primaryColorPrefix}
                             />
                             
-                            {/* Toggle for Professional Title */}
+                            {/* Toggle for Professional Title - now col-span-1 on mobile, 2 on medium+ */}
                             <Toggle
                                 label="Show Professional Title"
                                 name="showTitle"
@@ -783,7 +784,7 @@
                                 />
                             )}
                             
-                            {/* Toggle for LinkedIn URL */}
+                            {/* Toggle for LinkedIn URL - now col-span-1 on mobile, 2 on medium+ */}
                             <Toggle
                                 label="Show LinkedIn URL"
                                 name="showLinkedin"
@@ -803,7 +804,7 @@
                                 />
                             )}
                             
-                            {/* Toggle for Address */}
+                            {/* Toggle for Address - now col-span-1 on mobile, 2 on medium+ */}
                             <Toggle
                                 label="Show Full Address"
                                 name="showAddress"
@@ -856,7 +857,8 @@
                                 index={index}
                                 total={cvData.experience.length}
                             >
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <InputField
                                     name="title"
                                     label="Job Title"
@@ -881,7 +883,8 @@
                                     placeholder="e.g., 2020 - Present"
                                     colorPrefix={primaryColorPrefix}
                                     />
-                                    <div className="col-span-2">
+                                    {/* Description field always takes full width */}
+                                    <div className="col-span-1 md:col-span-2">
                                         <TextAreaField
                                             label="Description (One bullet point per line)"
                                             name="description"
@@ -917,7 +920,8 @@
                                 index={index}
                                 total={cvData.education.length}
                             >
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <InputField
                                     label="Degree/Qualification"
                                     name="degree"
@@ -940,7 +944,8 @@
                                     value={edu.duration}
                                     onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
                                     placeholder="e.g., 2014 - 2016"
-                                    fullWidth
+                                    /* FIX: Ensure duration field is also full width on mobile */
+                                    fullWidth={false} /* Removed fullWidth prop as the grid handles it, but kept it out of a two-column setup */
                                     colorPrefix={primaryColorPrefix}
                                     />
                                 </div>
