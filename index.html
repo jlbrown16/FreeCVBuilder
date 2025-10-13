@@ -226,7 +226,8 @@
             // --- Custom Components ---
 
             const InputField = ({ label, name, value, onChange, type = 'text', fullWidth = false, placeholder = '', colorPrefix, isInvalid = false, validationMessage = '' }) => (
-              <div className="mb-3" style={fullWidth ? { gridColumn: 'span 2 / span 2' } : {}}>
+              // Removed gridColumn styling from here as we manage it externally now
+              <div className="mb-3"> 
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {label}
                 </label>
@@ -250,7 +251,8 @@
             );
 
             const TextAreaField = ({ label, name, value, onChange, fullWidth = false, rows = 3, placeholder = '', colorPrefix }) => (
-              <div className="mb-3" style={fullWidth ? { gridColumn: 'span 2 / span 2' } : {}}>
+              // Removed gridColumn styling from here as we manage it externally now
+              <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {label}
                 </label>
@@ -267,8 +269,8 @@
             );
 
             const Toggle = ({ label, name, checked, onChange, colorPrefix }) => (
-              // Dynamic light background color
-              <div className={`flex items-center justify-between col-span-2 mb-3 p-3 bg-${colorPrefix}-50 rounded-lg`}>
+              // Changed col-span-2 to w-full to stop interfering with the main grid layout when used
+              <div className={`flex items-center justify-between w-full mb-3 p-3 bg-${colorPrefix}-50 rounded-lg`}>
                 <label htmlFor={name} className="text-sm font-medium text-gray-700 select-none">
                   {label}
                 </label>
@@ -732,8 +734,14 @@
                           <h3 className={`text-xl font-semibold text-${primaryColorPrefix}-600 mb-4`}>
                             Personal Information
                           </h3>
-                          {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 for full-width inputs on mobile */}
+                          {/*
+                            FIX: Changed grid-cols-1 md:grid-cols-2 to grid-cols-1 on mobile for all sections,
+                            and manually manage column spanning for pairs of elements.
+                            This ensures Full Name / Email, and Title / LinkedIn stack nicely on mobile.
+                          */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            {/* Full Name & Email (Pair 1) */}
                             <InputField
                               label="Full Name *"
                               name="name"
@@ -755,6 +763,8 @@
                               isInvalid={validateField('email', cvData.personal.email) !== null}
                               validationMessage={validateField('email', cvData.personal.email)}
                             />
+                            
+                            {/* Phone Number (Full width on mobile, half on desktop) */}
                             <InputField
                               label="Phone Number"
                               name="phone"
@@ -764,66 +774,82 @@
                               colorPrefix={primaryColorPrefix}
                             />
                             
-                            {/* Toggle for Professional Title - now col-span-1 on mobile, 2 on medium+ */}
-                            <Toggle
-                                label="Show Professional Title"
-                                name="showTitle"
-                                checked={cvData.personal.showTitle}
-                                onChange={handlePersonalChange}
-                                colorPrefix={primaryColorPrefix}
-                            />
-                            {/* Input for Title - only visible when toggle is ON */}
-                            {cvData.personal.showTitle && (
-                                <InputField
-                                  label="Professional Title"
-                                  name="title"
-                                  value={cvData.personal.title}
-                                  onChange={handlePersonalChange}
-                                  placeholder="Qualified Plumber"
-                                  colorPrefix={primaryColorPrefix}
+                            {/* Spacer to align Phone to the left when on desktop */}
+                            <div className="hidden md:block"></div> 
+
+
+                            {/* Professional Title Toggle & Input */}
+                            <div className="col-span-1 md:col-span-2">
+                                <Toggle
+                                    label="Show Professional Title"
+                                    name="showTitle"
+                                    checked={cvData.personal.showTitle}
+                                    onChange={handlePersonalChange}
+                                    colorPrefix={primaryColorPrefix}
                                 />
-                            )}
+                                {cvData.personal.showTitle && (
+                                    // Use an inner grid for the input when displayed
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <InputField
+                                          label="Professional Title"
+                                          name="title"
+                                          value={cvData.personal.title}
+                                          onChange={handlePersonalChange}
+                                          placeholder="Qualified Plumber"
+                                          colorPrefix={primaryColorPrefix}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+
+                            {/* LinkedIn Toggle & Input */}
+                            <div className="col-span-1 md:col-span-2">
+                                <Toggle
+                                    label="Show LinkedIn URL"
+                                    name="showLinkedin"
+                                    checked={cvData.personal.showLinkedin}
+                                    onChange={handlePersonalChange}
+                                    colorPrefix={primaryColorPrefix}
+                                />
+                                {cvData.personal.showLinkedin && (
+                                    // Use an inner grid for the input when displayed
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <InputField
+                                          label="LinkedIn URL"
+                                          name="linkedin"
+                                          value={cvData.personal.linkedin}
+                                          onChange={handlePersonalChange}
+                                          placeholder="linkedin.com/in/yourname"
+                                          colorPrefix={primaryColorPrefix}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                             
-                            {/* Toggle for LinkedIn URL - now col-span-1 on mobile, 2 on medium+ */}
-                            <Toggle
-                                label="Show LinkedIn URL"
-                                name="showLinkedin"
-                                checked={cvData.personal.showLinkedin}
-                                onChange={handlePersonalChange}
-                                colorPrefix={primaryColorPrefix}
-                            />
-                            {/* Input for LinkedIn - only visible when toggle is ON */}
-                            {cvData.personal.showLinkedin && (
-                                <InputField
-                                  label="LinkedIn URL"
-                                  name="linkedin"
-                                  value={cvData.personal.linkedin}
-                                  onChange={handlePersonalChange}
-                                  placeholder="linkedin.com/in/yourname"
-                                  colorPrefix={primaryColorPrefix}
-                                />
-                            )}
                             
-                            {/* Toggle for Address - now col-span-1 on mobile, 2 on medium+ */}
-                            <Toggle
-                                label="Show Full Address"
-                                name="showAddress"
-                                checked={cvData.personal.showAddress}
-                                onChange={handlePersonalChange}
-                                colorPrefix={primaryColorPrefix}
-                            />
-                            {/* Input for Address - visible when toggle is ON */}
-                            {cvData.personal.showAddress && (
-                                <InputField
-                                  label="Address (City, Postcode)"
-                                  name="address"
-                                  value={cvData.personal.address}
-                                  onChange={handlePersonalChange}
-                                  placeholder="Guiseley, Leeds LS20 1BG"
-                                  fullWidth={true} /* Span across both columns */
-                                  colorPrefix={primaryColorPrefix}
+                            {/* Address Toggle & Input (Always full width on both mobile/desktop for inputs like this) */}
+                            <div className="col-span-1 md:col-span-2">
+                                <Toggle
+                                    label="Show Full Address"
+                                    name="showAddress"
+                                    checked={cvData.personal.showAddress}
+                                    onChange={handlePersonalChange}
+                                    colorPrefix={primaryColorPrefix}
                                 />
-                            )}
+                                {cvData.personal.showAddress && (
+                                    <InputField
+                                      label="Address (City, Postcode)"
+                                      name="address"
+                                      value={cvData.personal.address}
+                                      onChange={handlePersonalChange}
+                                      placeholder="Guiseley, Leeds LS20 1BG"
+                                      fullWidth={true} /* Span across both columns */
+                                      colorPrefix={primaryColorPrefix}
+                                    />
+                                )}
+                            </div>
+                            
                           </div>
                         </div>
 
@@ -944,8 +970,6 @@
                                     value={edu.duration}
                                     onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
                                     placeholder="e.g., 2014 - 2016"
-                                    /* FIX: Ensure duration field is also full width on mobile */
-                                    fullWidth={false} /* Removed fullWidth prop as the grid handles it, but kept it out of a two-column setup */
                                     colorPrefix={primaryColorPrefix}
                                     />
                                 </div>
