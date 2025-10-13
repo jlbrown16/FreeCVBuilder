@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK CV Builder</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Set default font to Inter */
+        html { font-family: 'Inter', sans-serif; }
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            .cv-preview-container { 
+                display: block !important; 
+                width: 100% !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+            }
+            /* Remove shadows for clean PDF output */
+            .bg-white, .shadow-xl { box-shadow: none !important; }
+            /* Force full width on print */
+            body, .container { width: 100%; max-width: none; margin: 0; padding: 0; }
+        }
+        /* Toggle Switch Custom Styling */
+        .toggle-checkbox {
+            transition: transform 0.2s;
+        }
+        .toggle-checkbox:checked {
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useCallback, useRef, useEffect, forwardRef } = React;
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+
+        // --- Initial CV Data Structure (British context) ---
+        const createEmptyExperience = (id) => ({
+          id,
+          title: '',
+          company: '',
+          duration: '',
+          description: '',
+        });
+
+        const createEmptyEducation = (id) => ({
+          id,
+          institution: '',
+          degree: '',
+          duration: '',
+        });
+
+        const initialCVData = {
+          personal: {
+            name: 'Alastair Smith',
+            title: 'Digital Marketing Executive',
+            email: 'alastair.smith@example.co.uk',
+            phone: '07700 900345',
+            linkedin: 'linkedin.com/in/alastairsmith',
+            showTitle: true,
+            showLinkedin: true,
+          },
+          summary: 'A highly adaptable and results-driven professional with 3 years of experience developing successful digital campaigns and strategies across multiple channels. Proven track record of improving ROI and brand visibility.',
+          experience: [
+            {
+              id: 1,
+              title: 'Digital Marketing Executive',
+              company: 'Trafalgar Solutions Ltd.',
+              duration: '2022 - Present',
+              description: '• Managed a budget of £50k, achieving a 15% increase in lead generation.\n• Oversaw SEO and content strategy, resulting in a 25% organic traffic boost.\n• Collaborated cross-functionally with Sales and Product teams to align marketing efforts.',
+            },
+          ],
+          education: [
+            {
+              id: 1,
+              institution: 'University of Manchester',
+              degree: 'BA (Hons) Business Studies',
+              duration: '2019 - 2022',
+            },
+          ],
+          skills: 'SEO, Google Analytics, PPC, Content Strategy, CRM, Microsoft Office',
+        };
+
+        // --- Local Storage Handlers ---
+        const LOCAL_STORAGE_KEY = 'cvBuilderData_v1';
+
+        const loadCVData = () => {
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    return {
+                        ...initialCVData,
+                        ...parsedData,
+                        personal: { ...initialCVData.personal, ...parsedData.personal },
+                    };
+                }
+            } catch (e) {
+                console.error("Error loading from localStorage, using initial data.", e);
+            }
+            return initialCVData;
+        };
+
+        const saveCVData = (data) => {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.error("Error saving to localStorage.", e);
+            }
+        };
+
+
+        // --- Custom Components ---
+
+        const InputField = ({ label, name, value, onChange, type = 'text', fullWidth = false, placeholder = '' }) => (
+          <div className={`mb-3 ${fullWidth ? 'col-span-2' : ''}`}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {label}
+            </label>
+            <input
+              type={type}
+              name={name}
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+            />
+          </div>
+        );
+
+        const TextAreaField = ({ label, name, value, onChange, fullWidth = false, rows = 3, placeholder = '' }) => (
+          <div className={`mb-3 ${fullWidth ? 'col-span-2' : ''}`}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {label}
+            </label>
+            <textarea
+              name={name}
+              value={value}
+              onChange={onChange}
+              rows={rows}
+              placeholder={placeholder}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out"
+            />
+          </div>
+        );
+
+        const Toggle = ({ label, name, checked, onChange }) => (
+          <div className="flex items-center justify-between col-span-2 mb-3 p-3 bg-indigo-50 rounded-lg">
+            <label htmlFor={name} className="text-sm font-medium text-gray-700 select-none">
+              {label}
+            </label>
+            <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+              <input
+                type="checkbox"
+                name={name}
+                id={name}
+                checked={checked}
+                onChange={onChange}
+                // Custom styling for the switch
+                className={`toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer ${
+                  checked ? 'transform translate-x-full border-indigo-600' : 'border-gray-300'
+                }`}
+                style={{
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                }}
+              />
+              <label
+                htmlFor={name}
+                className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${checked ? 'bg-indigo-600' : 'bg-gray-300'}`}
+              ></label>
+            </div>
+          </div>
+        );
+
+
+        // --- CV Preview Component ---
+
+        const CVPreview = forwardRef(({ data }, ref) => {
+          const { personal, summary, experience, education, skills } = data;
+          const { name, title, email, phone, linkedin, showTitle, showLinkedin } = personal;
+
+          const SkillPill = ({ skill }) => (
+            <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full mr-2 mb-2">
+              {skill.trim()}
+            </span>
+          );
+
+          return (
+            <div
+              ref={ref}
+              className="bg-white p-6 md:p-10 shadow-xl min-h-[80vh] w-full"
+            >
+              {/* Header - Personal Info */}
+              <header className="border-b-4 border-indigo-600 pb-2 mb-6">
+                <h1 className="text-4xl font-extrabold text-gray-900 mb-1">
+                  {name || 'Your Name'}
+                </h1>
+                {/* Title is shown only if showTitle is true */}
+                {showTitle && (
+                    <p className="text-xl font-semibold text-indigo-600 mb-2">
+                      {title || 'Your Professional Title'}
+                    </p>
+                )}
+                <div className="flex flex-wrap text-sm text-gray-600 space-x-4">
+                  <span>{phone}</span>
+                  <span>&middot;</span>
+                  <span>{email}</span>
+                  {/* LinkedIn is shown only if showLinkedin is true and a value exists */}
+                  {showLinkedin && linkedin && (
+                    <>
+                      <span>&middot;</span>
+                      <span className="truncate max-w-[200px]">{linkedin}</span>
+                    </>
+                  )}
+                </div>
+              </header>
+
+              {/* Summary */}
+              <section className="mb-6">
+                <h2 className="text-lg font-bold uppercase text-indigo-600 border-b border-gray-300 mb-2 pb-1">
+                  Professional Summary
+                </h2>
+                <p className="text-gray-700 leading-relaxed text-sm">
+                  {summary || 'A brief summary of your career and professional goals.'}
+                </p>
+              </section>
+
+              {/* Experience */}
+              <section className="mb-6">
+                <h2 className="text-lg font-bold uppercase text-indigo-600 border-b border-gray-300 mb-3 pb-1">
+                  Work Experience
+                </h2>
+                {experience.filter(e => e.title || e.company).map((exp, index) => (
+                  <div key={exp.id} className={`mb-4 ${index > 0 ? 'mt-4' : ''}`}>
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-md font-bold text-gray-900">
+                        {exp.title || 'Job Title'}
+                      </h3>
+                      <span className="text-sm text-gray-500 font-medium">
+                        {exp.duration || '2020 - Present'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-indigo-600 font-medium italic mb-1">
+                      {exp.company || 'Company Name'}
+                    </p>
+                    <p className="text-xs text-gray-700 whitespace-pre-line">
+                      {exp.description || 'Key responsibilities and achievements.'}
+                    </p>
+                  </div>
+                ))}
+              </section>
+
+              {/* Education */}
+              <section className="mb-6">
+                <h2 className="text-lg font-bold uppercase text-indigo-600 border-b border-gray-300 mb-3 pb-1">
+                  Education
+                </h2>
+                {education.filter(e => e.degree || e.institution).map(edu => (
+                  <div key={edu.id} className="mb-2">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-md font-bold text-gray-900">
+                        {edu.degree || 'Degree/Major'}
+                      </h3>
+                      <span className="text-sm text-gray-500 font-medium">
+                        {edu.duration || '2016 - 2020'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-indigo-600 font-medium italic">
+                      {edu.institution || 'University Name'}
+                    </p>
+                  </div>
+                ))}
+              </section>
+
+              {/* Skills */}
+              <section>
+                <h2 className="text-lg font-bold uppercase text-indigo-600 border-b border-gray-300 mb-3 pb-1">
+                  Skills & Technologies
+                </h2>
+                <div className="flex flex-wrap gap-1">
+                  {skills
+                    .split(',')
+                    .filter(s => s.trim().length > 0)
+                    .map((skill, index) => (
+                      <SkillPill key={index} skill={skill} />
+                    ))}
+                </div>
+              </section>
+            </div>
+          );
+        });
+
+        // --- Main Application Component ---
+
+        function App() {
+          const [cvData, setCvData] = useState(loadCVData);
+          const [saveStatus, setSaveStatus] = useState('Loaded from browser storage.');
+          const previewRef = useRef(null);
+
+          const debounceTimeoutRef = useRef(null);
+
+          const handleSave = useCallback((dataToSave) => {
+            setSaveStatus('Saving...');
+            
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+
+            debounceTimeoutRef.current = setTimeout(() => {
+                saveCVData(dataToSave);
+                setSaveStatus('Saved to browser storage successfully!');
+                setTimeout(() => setSaveStatus(''), 3000);
+            }, 500);
+          }, []);
+
+
+          // --- Input Handlers ---
+
+          const handlePersonalChange = (e) => {
+            const { name, value, type, checked } = e.target;
+            const newValue = type === 'checkbox' ? checked : value;
+
+            const newData = {
+              ...cvData,
+              personal: { ...cvData.personal, [name]: newValue },
+            };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+          const handleSummaryAndSkillsChange = (e) => {
+            const { name, value } = e.target;
+            const newData = { ...cvData, [name]: value };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+          const handleArrayChange = (section, id, name, value) => {
+            const updatedArray = cvData[section].map((item) =>
+              item.id === id ? { ...item, [name]: value } : item
+            );
+            const newData = { ...cvData, [section]: updatedArray };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+          const handleAddSection = (section, emptyCreator) => {
+            const newId = Date.now() + Math.random();
+            const newSection = emptyCreator(newId);
+            const newData = {
+              ...cvData,
+              [section]: [...cvData[section], newSection],
+            };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+          const handleRemoveSection = (section, id) => {
+            const updatedArray = cvData[section].filter((item) => item.id !== id);
+            const newData = { ...cvData, [section]: updatedArray };
+            setCvData(newData);
+            handleSave(newData);
+          };
+
+          const handlePrint = () => {
+            window.print();
+          };
+
+          return (
+            <div className="min-h-screen bg-gray-50 font-sans">
+              <div className="container mx-auto px-4 py-8">
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+                  CV Builder (GitHub Pages Ready)
+                </h1>
+                <p className="text-sm text-gray-600 mb-6">
+                  This version saves your data automatically to your **browser's local storage**.
+                </p>
+
+                {/* Main Layout: Form (70%) and Preview (30%) on Desktop */}
+                <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                  {/* Input Form - Hidden in Print View */}
+                  <div className="lg:col-span-2 no-print bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 lg:mb-0">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800">Edit Your Details</h2>
+                        <div className="relative">
+                            <button
+                                onClick={handlePrint}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out mr-2"
+                                aria-label="Print CV"
+                            >
+                                Print/PDF
+                            </button>
+                            <div className={`absolute right-0 mt-12 p-2 text-xs rounded-lg text-white ${
+                                saveStatus.startsWith('Error') ? 'bg-red-500' : 
+                                saveStatus.startsWith('Saved') || saveStatus.startsWith('Loaded') ? 'bg-indigo-500' : 'bg-gray-500'
+                            }`}>
+                                {saveStatus || 'Ready'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Personal Information */}
+                    <div className="mb-8 border-b pb-4">
+                      <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+                        Personal Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField
+                          label="Full Name"
+                          name="name"
+                          value={cvData.personal.name}
+                          onChange={handlePersonalChange}
+                          placeholder="Alastair Smith"
+                        />
+                        <InputField
+                          label="Email"
+                          name="email"
+                          type="email"
+                          value={cvData.personal.email}
+                          onChange={handlePersonalChange}
+                          placeholder="your.email@example.co.uk"
+                        />
+                        <InputField
+                          label="Phone Number"
+                          name="phone"
+                          value={cvData.personal.phone}
+                          onChange={handlePersonalChange}
+                          placeholder="07700 900345"
+                        />
+                        
+                        {/* Toggle for Professional Title */}
+                        <Toggle
+                            label="Show Professional Title"
+                            name="showTitle"
+                            checked={cvData.personal.showTitle}
+                            onChange={handlePersonalChange}
+                        />
+                        {/* Input for Title - only visible when toggle is ON */}
+                        {cvData.personal.showTitle && (
+                            <InputField
+                              label="Professional Title"
+                              name="title"
+                              value={cvData.personal.title}
+                              onChange={handlePersonalChange}
+                              placeholder="Digital Marketing Executive"
+                            />
+                        )}
+                        
+                        {/* Toggle for LinkedIn URL */}
+                        <Toggle
+                            label="Show LinkedIn URL"
+                            name="showLinkedin"
+                            checked={cvData.personal.showLinkedin}
+                            onChange={handlePersonalChange}
+                        />
+                        {/* Input for LinkedIn - only visible when toggle is ON */}
+                        {cvData.personal.showLinkedin && (
+                            <InputField
+                              label="LinkedIn URL"
+                              name="linkedin"
+                              value={cvData.personal.linkedin}
+                              onChange={handlePersonalChange}
+                              placeholder="linkedin.com/in/yourname"
+                            />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="mb-8 border-b pb-4">
+                      <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+                        Professional Summary
+                      </h3>
+                      <TextAreaField
+                        label="Summary"
+                        name="summary"
+                        value={cvData.summary}
+                        onChange={handleSummaryAndSkillsChange}
+                        rows={4}
+                        placeholder="Write a compelling, short paragraph about your career goals and achievements."
+                        fullWidth
+                      />
+                    </div>
+
+                    {/* Work Experience */}
+                    <div className="mb-8 border-b pb-4">
+                      <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+                        Work Experience
+                      </h3>
+                      {cvData.experience.map((exp) => (
+                        <div key={exp.id} className="p-4 mb-4 border border-gray-200 rounded-lg bg-gray-50 relative">
+                          <button
+                            onClick={() => handleRemoveSection('experience', exp.id)}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold p-1 rounded-full text-lg leading-none"
+                            title="Remove Job"
+                          >
+                            &times;
+                          </button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <InputField
+                              label="Job Title"
+                              name="title"
+                              value={exp.title}
+                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                              placeholder="e.g., Marketing Assistant"
+                            />
+                            <InputField
+                              label="Company"
+                              name="company"
+                              value={exp.company}
+                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                              placeholder="e.g., Trafalgar Solutions Ltd."
+                            />
+                            <InputField
+                              label="Duration"
+                              name="duration"
+                              value={exp.duration}
+                              onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                              placeholder="e.g., 2022 - Present"
+                            />
+                            <div className="col-span-2">
+                                <TextAreaField
+                                    label="Description (Bullet points recommended)"
+                                    name="description"
+                                    value={exp.description}
+                                    onChange={(e) => handleArrayChange('experience', exp.id, e.target.name, e.target.value)}
+                                    rows={4}
+                                    placeholder="Use bullet points (e.g., • Achieved target metrics; • Led team briefing)"
+                                />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => handleAddSection('experience', createEmptyExperience)}
+                        className="w-full bg-indigo-100 text-indigo-700 font-semibold py-2 rounded-lg hover:bg-indigo-200 transition duration-150 ease-in-out mt-2"
+                      >
+                        + Add Experience
+                      </button>
+                    </div>
+
+                    {/* Education */}
+                    <div className="mb-8 border-b pb-4">
+                      <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+                        Education
+                      </h3>
+                      {cvData.education.map((edu) => (
+                        <div key={edu.id} className="p-4 mb-4 border border-gray-200 rounded-lg bg-gray-50 relative">
+                          <button
+                            onClick={() => handleRemoveSection('education', edu.id)}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold p-1 rounded-full text-lg leading-none"
+                            title="Remove Education"
+                          >
+                            &times;
+                          </button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <InputField
+                              label="Degree/Qualification"
+                              name="degree"
+                              value={edu.degree}
+                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                              placeholder="e.g., BA (Hons) History"
+                            />
+                            <InputField
+                              label="Institution"
+                              name="institution"
+                              value={edu.institution}
+                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                              placeholder="e.g., University of Bristol"
+                            />
+                            <InputField
+                              label="Duration"
+                              name="duration"
+                              value={edu.duration}
+                              onChange={(e) => handleArrayChange('education', edu.id, e.target.name, e.target.value)}
+                              placeholder="e.g., 2019 - 2022"
+                              fullWidth
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => handleAddSection('education', createEmptyEducation)}
+                        className="w-full bg-indigo-100 text-indigo-700 font-semibold py-2 rounded-lg hover:bg-indigo-200 transition duration-150 ease-in-out mt-2"
+                      >
+                        + Add Education
+                      </button>
+                    </div>
+
+                    {/* Skills */}
+                    <div className="pb-4">
+                      <h3 className="text-xl font-semibold text-indigo-600 mb-4">
+                        Skills
+                      </h3>
+                      <TextAreaField
+                        label="Technical Skills (Comma-separated list)"
+                        name="skills"
+                        value={cvData.skills}
+                        onChange={handleSummaryAndSkillsChange}
+                        rows={2}
+                        placeholder="e.g., SEO, Google Analytics, CRM, Microsoft Office"
+                        fullWidth
+                      />
+                    </div>
+
+                  </div>
+
+                  {/* CV Preview - Visible on all devices */}
+                  <div className="lg:col-span-1 cv-preview-container">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4 no-print lg:block hidden">Live Preview</h2>
+                    <div className="sticky top-8">
+                        <CVPreview data={cvData} ref={previewRef} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        root.render(<App />);
+    </script>
+</body>
+</html>
