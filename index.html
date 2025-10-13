@@ -10,6 +10,8 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font Awesome CDN for Icons (added for phone, email, address, and LinkedIn) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJd/r0VqLw6GqC5W+WpB2oQ3vB7q+g+uY/14W17+I/uQ/Pz7U11Z4fV2r8vQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Set default font to Inter */
         html { font-family: 'Inter', sans-serif; }
@@ -82,6 +84,10 @@
             email: 'alastair.smith@example.co.uk',
             phone: '07700 900345',
             linkedin: 'linkedin.com/in/alastairsmith',
+            // New Address fields
+            address: '14 New Street, Manchester M1 1AA',
+            showAddress: true,
+            // Existing fields
             showTitle: true,
             showLinkedin: true,
           },
@@ -202,7 +208,7 @@
 
         const CVPreview = forwardRef(({ data }, ref) => {
           const { personal, summary, experience, education, skills } = data;
-          const { name, title, email, phone, linkedin, showTitle, showLinkedin } = personal;
+          const { name, title, email, phone, linkedin, showTitle, showLinkedin, address, showAddress } = personal;
 
           const SkillPill = ({ skill }) => (
             <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full mr-2 mb-2">
@@ -226,16 +232,36 @@
                       {title || 'Your Professional Title'}
                     </p>
                 )}
-                <div className="flex flex-wrap text-sm text-gray-600 space-x-4">
-                  <span>{phone}</span>
-                  <span>&middot;</span>
-                  <span>{email}</span>
-                  {/* LinkedIn is shown only if showLinkedin is true and a value exists */}
+                
+                {/* Contact Info with Icons and Spacing */}
+                <div className="flex flex-wrap text-sm text-gray-600 gap-y-1 gap-x-4">
+                  
+                  {/* Phone */}
+                  <span className="flex items-center space-x-1">
+                    <i className="fa-solid fa-square-phone text-indigo-600 text-lg"></i>
+                    <span>{phone}</span>
+                  </span>
+                  
+                  {/* Email */}
+                  <span className="flex items-center space-x-1">
+                    <i className="fa-solid fa-square-envelope text-indigo-600 text-lg"></i>
+                    <span>{email}</span>
+                  </span>
+
+                  {/* Address (New toggleable field) */}
+                  {showAddress && address && (
+                    <span className="flex items-center space-x-1">
+                      <i className="fa-solid fa-location-dot text-indigo-600 text-lg"></i>
+                      <span>{address}</span>
+                    </span>
+                  )}
+                  
+                  {/* LinkedIn */}
                   {showLinkedin && linkedin && (
-                    <>
-                      <span>&middot;</span>
+                    <span className="flex items-center space-x-1">
+                      <i className="fa-brands fa-square-linkedin text-indigo-600 text-lg"></i>
                       <span className="truncate max-w-[200px]">{linkedin}</span>
-                    </>
+                    </span>
                   )}
                 </div>
               </header>
@@ -476,6 +502,25 @@
                               value={cvData.personal.linkedin}
                               onChange={handlePersonalChange}
                               placeholder="linkedin.com/in/yourname"
+                            />
+                        )}
+                        
+                        {/* Toggle for Address (New) */}
+                        <Toggle
+                            label="Show Full Address"
+                            name="showAddress"
+                            checked={cvData.personal.showAddress}
+                            onChange={handlePersonalChange}
+                        />
+                        {/* Input for Address (New) - visible when toggle is ON */}
+                        {cvData.personal.showAddress && (
+                            <InputField
+                              label="Address"
+                              name="address"
+                              value={cvData.personal.address}
+                              onChange={handlePersonalChange}
+                              placeholder="14 New Street, Manchester M1 1AA"
+                              fullWidth={true} /* Span across both columns */
                             />
                         )}
                       </div>
