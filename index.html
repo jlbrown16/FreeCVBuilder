@@ -119,6 +119,13 @@
               degree: 'NVQ Level 3 Plumbing and Heating',
               duration: '2014 - 2016',
             },
+            // NEW GCSE Entry added back for school leaver context
+            {
+              id: 2,
+              institution: 'Guiseley High School',
+              degree: 'GCSEs (9 subjects including Maths & English)',
+              duration: '2009 - 2014',
+            },
           ],
           skills: 'NVQ Level 3 Plumbing, Boiler Service & Repair, Bathroom Fitting, Leak Diagnostics, Pipework Installation (Copper/Plastic), Customer Service, Health & Safety',
         };
@@ -392,6 +399,7 @@
 
           // --- Reset Handler (New Function) ---
           const handleReset = () => {
+              // NOTE: window.confirm is used here for simplicity as the environment permits it for critical actions
               if (window.confirm("Are you sure you want to reset all data to the example plumber CV? This action cannot be undone.")) {
                   // Create a fresh deep copy of the initial data
                   const initialDataCopy = JSON.parse(JSON.stringify(initialCVData));
@@ -480,7 +488,7 @@
                     <div className="flex justify-between items-center mb-6 flex-wrap gap-y-2">
                         <h2 className="text-2xl font-bold text-gray-800">Edit Your Details</h2>
                         <div className="relative flex space-x-2">
-                            {/* NEW Reset Button */}
+                            {/* Reset Button */}
                             <button
                                 onClick={handleReset}
                                 className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out`}
