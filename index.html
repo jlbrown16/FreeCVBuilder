@@ -303,13 +303,12 @@
 
         function App() {
           const [cvData, setCvData] = useState(loadCVData);
-          const [saveStatus, setSaveStatus] = useState('Loaded from browser storage.');
+          // Removed saveStatus state initialization
           const previewRef = useRef(null);
 
           const debounceTimeoutRef = useRef(null);
 
           const handleSave = useCallback((dataToSave) => {
-            setSaveStatus('Saving...');
             
             if (debounceTimeoutRef.current) {
                 clearTimeout(debounceTimeoutRef.current);
@@ -317,8 +316,7 @@
 
             debounceTimeoutRef.current = setTimeout(() => {
                 saveCVData(dataToSave);
-                setSaveStatus('Saved to browser storage successfully!');
-                setTimeout(() => setSaveStatus(''), 3000);
+                // Removed all setSaveStatus calls
             }, 500);
           }, []);
 
@@ -378,10 +376,11 @@
           return (
             <div className="min-h-screen bg-gray-50 font-sans">
               <div className="container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+                {/* These are hidden on print using the 'no-print' class */}
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-2 no-print">
                   CV Builder (GitHub Pages Ready)
                 </h1>
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-sm text-gray-600 mb-6 no-print">
                   This version saves your data automatically to your **browser's local storage**.
                 </p>
 
@@ -399,12 +398,7 @@
                             >
                                 Print/PDF
                             </button>
-                            <div className={`absolute right-0 mt-12 p-2 text-xs rounded-lg text-white ${
-                                saveStatus.startsWith('Error') ? 'bg-red-500' : 
-                                saveStatus.startsWith('Saved') || saveStatus.startsWith('Loaded') ? 'bg-indigo-500' : 'bg-gray-500'
-                            }`}>
-                                {saveStatus || 'Ready'}
-                            </div>
+                            {/* Removed status message div */}
                         </div>
                     </div>
 
@@ -616,6 +610,7 @@
 
                   {/* CV Preview - Visible on all devices */}
                   <div className="lg:col-span-1 cv-preview-container">
+                    {/* This H2 is hidden on print using the 'no-print' class */}
                     <h2 className="text-2xl font-bold text-gray-800 mb-4 no-print lg:block hidden">Live Preview</h2>
                     <div className="sticky top-8">
                         <CVPreview data={cvData} ref={previewRef} />
