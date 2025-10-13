@@ -277,38 +277,42 @@
                     </p>
                 )}
                 
-                {/* NEW: Contact Info Layout
+                {/* Contact Info Layout
                   - Responsive: 1 column on mobile, 2 columns on larger screens (md:grid-cols-2)
                   - Grid gap for better spacing (gap-x-4 gap-y-1)
                   - Each item is a flex container for perfect icon/text alignment 
                 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 text-sm text-gray-600 gap-x-4 gap-y-1">
                   
-                  {/* Phone */}
+                  {/* 1. Phone */}
+                  {/* CHANGED items-start to items-center and removed mt-[2px] from icon */}
                   <span className="flex items-center space-x-2">
                     <i className={`fa-solid fa-square-phone ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
-                    <span className="truncate">{phone}</span>
+                    <span className="break-all">{phone}</span>
                   </span>
                   
-                  {/* Email */}
-                  <span className="flex items-center space-x-2">
-                    <i className={`fa-solid fa-square-envelope ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
-                    <span className="truncate">{email}</span>
-                  </span>
-
-                  {/* Address */}
+                  {/* 2. Address (Conditional) */}
                   {showAddress && address && (
+                    /* CHANGED items-start to items-center and removed mt-[2px] from icon */
                     <span className="flex items-center space-x-2">
                       <i className={`fa-solid fa-location-dot ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
-                      <span className="truncate">{address}</span>
+                      <span className="break-words">{address}</span>
                     </span>
                   )}
                   
-                  {/* LinkedIn */}
+                  {/* 3. Email */}
+                  {/* CHANGED items-start to items-center and removed mt-[2px] from icon */}
+                  <span className="flex items-center space-x-2">
+                    <i className={`fa-solid fa-square-envelope ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
+                    <span className="break-all">{email}</span>
+                  </span>
+
+                  {/* 4. LinkedIn (Conditional) */}
                   {showLinkedin && linkedin && (
+                    /* CHANGED items-start to items-center and removed mt-[2px] from icon */
                     <span className="flex items-center space-x-2">
                       <i className={`fa-brands fa-square-linkedin ${getTextColor(600)} text-lg min-w-[20px] text-center`}></i>
-                      <span className="truncate">{linkedin}</span>
+                      <span className="break-all">{linkedin}</span>
                     </span>
                   )}
                 </div>
@@ -357,7 +361,7 @@
                 {/* Dynamic text colour */}
                 <h2 className={`text-lg font-bold uppercase ${getTextColor(600)} border-b border-gray-300 mb-3 pb-1`}>
                   Education
-                </h2>
+                </h2 >
                 {education.filter(e => e.degree || e.institution).map(edu => (
                   <div key={edu.id} className="mb-2">
                     <div className="flex justify-between items-start">
