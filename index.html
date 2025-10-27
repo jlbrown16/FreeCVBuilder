@@ -7,7 +7,6 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & Babel CDNs -->
-    <!-- FIX: Updated React and ReactDOM CDNs to v18 for modern stability and createRoot -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -235,7 +234,8 @@
         window.onload = function() {
         
             // FIX: Explicitly use window.React and window.ReactDOM to ensure the globals are accessed after CDNs load.
-            const { useState, useCallback, useRef, forwardRef } = window.React;
+            // ADDED 'memo' for component memoization (the fix for the focus loss issue)
+            const { useState, useCallback, useRef, forwardRef, memo } = window.React;
             const root = window.ReactDOM.createRoot(document.getElementById('root'));
 
             // --- Custom Components ---
@@ -488,6 +488,66 @@
               );
             });
 
+            // --- Item Movement/Edit Wrapper Component ---
+            
+            // FIX: Wrapping with React.memo to prevent unnecessary re-renders of sibling items
+            // which was causing the input fields to be unmounted and remounted, losing focus.
+            const ArrayItemEditor = memo(({ section, item, children, index, total, handleMove, handleRemoveSection }) => {
+                const isMovable = total > 1;
+                const isFirst = index === 0;
+                const isLast = index === total - 1;
+
+                return (
+                  <div
+                    // NOTE: Key is passed in by the parent map function, not defined here
+                    className={`p-4 mb-4 border rounded-lg bg-gray-50 relative border-gray-200 transition-all duration-200 ease-in-out hover:bg-gray-100`}
+                  >
+                      {/* Action Buttons Container */}
+                      <div className="absolute top-2 right-2 flex space-x-1 z-10">
+                          {isMovable && (
+                              <>
+                                  {/* Move Down Button */}
+                                  <button
+                                      onClick={() => handleMove(section, item.id, 'down')}
+                                      disabled={isLast}
+                                      className={`text-gray-500 p-1 rounded-full text-lg leading-none transition duration-150 ${isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 hover:text-gray-700'}`}
+                                      title={`Move ${section.slice(0, -1)} Down`}
+                                      aria-label={`Move item ${index + 1} down`}
+                                  >
+                                      <i className="fa-solid fa-circle-down text-lg"></i>
+                                  </button>
+                                  {/* Move Up Button */}
+                                  <button
+                                      onClick={() => handleMove(section, item.id, 'up')}
+                                      disabled={isFirst}
+                                      className={`text-gray-500 p-1 rounded-full text-lg leading-none transition duration-150 ${isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 hover:text-gray-700'}`}
+                                      title={`Move ${section.slice(0, -1)} Up`}
+                                      aria-label={`Move item ${index + 1} up`}
+                                  >
+                                      <i className="fa-solid fa-circle-up text-lg"></i>
+                                  </button>
+                              </>
+                          )}
+
+                          {/* Remove Button */}
+                          <button
+                              onClick={() => handleRemoveSection(section, item.id)}
+                              className="text-red-500 hover:text-red-700 p-1 rounded-full text-lg leading-none transition duration-150 hover:bg-red-100"
+                              title={`Remove ${section.slice(0, -1)}`}
+                              aria-label={`Remove item ${index + 1}`}
+                          >
+                              <i className="fa-solid fa-circle-xmark text-lg"></i>
+                          </button>
+                      </div>
+                      
+                      {/* Content Area */}
+                      <div className="pt-2">
+                          {children}
+                      </div>
+                  </div>
+                );
+            });
+
             // --- Main Application Component ---
 
             function App() {
@@ -572,14 +632,19 @@
                 handleSave(newData);
               };
 
-              const handleArrayChange = (section, id, name, value) => {
-                const updatedArray = cvData[section].map((item) =>
-                  item.id === id ? { ...item, [name]: value } : item
-                );
-                const newData = { ...cvData, [section]: updatedArray };
-                setCvData(newData);
-                handleSave(newData);
-              };
+              // FIX: Wrapped handleArrayChange with useCallback to ensure stability when passed to memoized ArrayItemEditor
+              const handleArrayChange = useCallback((section, id, name, value) => {
+                // Use functional update form of setState to get the latest state reliably
+                setCvData(prevCvData => {
+                    const updatedArray = prevCvData[section].map((item) =>
+                        item.id === id ? { ...item, [name]: value } : item
+                    );
+                    const newData = { ...prevCvData, [section]: updatedArray };
+                    // Save the new state
+                    handleSave(newData); 
+                    return newData;
+                });
+              }, [handleSave]); // handleSave is stable (using useCallback)
 
               const handleAddSection = (section, emptyCreator) => {
                 const newId = Date.now() + Math.random();
@@ -621,64 +686,6 @@
                   const newData = { ...cvData, [section]: items };
                   setCvData(newData);
                   handleSave(newData);
-              };
-
-
-              // Component for Experience/Education items to handle edit/move logic
-              const ArrayItemEditor = ({ section, item, children, index, total }) => {
-                const isMovable = total > 1;
-                const isFirst = index === 0;
-                const isLast = index === total - 1;
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-4 mb-4 border rounded-lg bg-gray-50 relative border-gray-200 transition-all duration-200 ease-in-out hover:bg-gray-100`}
-                  >
-                      {/* Action Buttons Container */}
-                      <div className="absolute top-2 right-2 flex space-x-1 z-10">
-                          {isMovable && (
-                              <>
-                                  {/* Move Down Button */}
-                                  <button
-                                      onClick={() => handleMove(section, item.id, 'down')}
-                                      disabled={isLast}
-                                      className={`text-gray-500 p-1 rounded-full text-lg leading-none transition duration-150 ${isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 hover:text-gray-700'}`}
-                                      title={`Move ${section.slice(0, -1)} Down`}
-                                      aria-label={`Move item ${index + 1} down`}
-                                  >
-                                      <i className="fa-solid fa-circle-down text-lg"></i>
-                                  </button>
-                                  {/* Move Up Button */}
-                                  <button
-                                      onClick={() => handleMove(section, item.id, 'up')}
-                                      disabled={isFirst}
-                                      className={`text-gray-500 p-1 rounded-full text-lg leading-none transition duration-150 ${isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 hover:text-gray-700'}`}
-                                      title={`Move ${section.slice(0, -1)} Up`}
-                                      aria-label={`Move item ${index + 1} up`}
-                                  >
-                                      <i className="fa-solid fa-circle-up text-lg"></i>
-                                  </button>
-                              </>
-                          )}
-
-                          {/* Remove Button */}
-                          <button
-                              onClick={() => handleRemoveSection(section, item.id)}
-                              className="text-red-500 hover:text-red-700 p-1 rounded-full text-lg leading-none transition duration-150 hover:bg-red-100"
-                              title={`Remove ${section.slice(0, -1)}`}
-                              aria-label={`Remove item ${index + 1}`}
-                          >
-                              <i className="fa-solid fa-circle-xmark text-lg"></i>
-                          </button>
-                      </div>
-                      
-                      {/* Content Area */}
-                      <div className="pt-2">
-                          {children}
-                      </div>
-                  </div>
-                );
               };
 
 
@@ -886,11 +893,13 @@
                           </h3>
                           {cvData.experience.map((exp, index) => (
                             <ArrayItemEditor 
-                                key={exp.id} 
+                                key={exp.id} // The key is correct here
                                 section="experience" 
                                 item={exp} 
                                 index={index}
                                 total={cvData.experience.length}
+                                handleMove={handleMove}
+                                handleRemoveSection={handleRemoveSection}
                             >
                                 {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -949,11 +958,13 @@
                           </h3>
                           {cvData.education.map((edu, index) => (
                             <ArrayItemEditor 
-                                key={edu.id} 
+                                key={edu.id} // The key is correct here
                                 section="education" 
                                 item={edu} 
                                 index={index}
                                 total={cvData.education.length}
+                                handleMove={handleMove}
+                                handleRemoveSection={handleRemoveSection}
                             >
                                 {/* FIX: Changed grid-cols-2 to grid-cols-1 md:grid-cols-2 */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
